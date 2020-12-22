@@ -44,7 +44,7 @@ int ints[INTS_MAX] = {0};
 int intsTime[INTS_MAX_TIME] = {0};
 
 // (IDM = identification of message)
-#define IDM_UPDATE_DISPLAY 2
+#define IDM_UPDATE_DISPLAY 1
 #define IDM_DISPLAY_MINMAX 2
 #define IDM_DISPLAY_AVERAGE 3
 #define IDM_DISPLAY_HISTORY 4

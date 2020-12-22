@@ -1,13 +1,10 @@
-/*
- * ShowDate.h
- *
- * Created: 20.12.2020 17.49.05
- *  Author: jarse
- */ 
-
 
 #ifndef SHOWDATE_H_
 #define SHOWDATE_H_
+
+#define IDD_DAY 3
+#define IDD_MONTH 4
+#define IDD_YEAR 5
 
 void ShowDate(void);
 

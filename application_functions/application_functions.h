@@ -14,6 +14,7 @@
 
 #include "../devices/device.h"
 #include "ShowTime.h"
+#include "ShowDate.h"
 #include "StartTimer.h"
 
 #endif /* APPLICATION_FUNCTIONS_H_ */
