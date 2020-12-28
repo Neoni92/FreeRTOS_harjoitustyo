@@ -62,6 +62,9 @@ int main( void )
 	return 0;
 } // main ends
 
+//------------------------
+// -- APPLICATION TASKS --
+
 // task vDoMeasurements starts
 // this task measures temperature from our DS1820 sensor, connected to A7 on Arduino Mega
 // temperature value is kept in ints[IDD_TEMPERATURE]
@@ -69,7 +72,7 @@ int main( void )
 static void vDoMeasurements( void *pvParameters )
 {
 	( void ) pvParameters; // Just to stop compiler warnings.
-	int value ;
+	float value ;
 
 		static unsigned char  numberOfSensors;
 		
@@ -77,26 +80,26 @@ static void vDoMeasurements( void *pvParameters )
 		numberOfSensors = GetSensorCount();
 		
 		// max and min temperature values, temperature times 10x because integer
-		ints[IDD_MAXTEMPERATURE] = -600;
-		ints[IDD_MINTEMPERATURE] = 1300;
+		temperatures[IDD_MAXTEMPERATURE] = -600;
+		temperatures[IDD_MINTEMPERATURE] = 1300;
 
 		for( ;; )
 		{
 
 			if (numberOfSensors)
 			{
-				value  = (int)(GetTemperature(0)/1000);
+				value  = (float)(GetTemperature(0)/10000.0); // convert long value to float
 		        taskENTER_CRITICAL();
-		        ints[ IDD_TEMPERATURE ] = value ;
+		        temperatures[IDD_TEMPERATURE] = value;
 		        taskEXIT_CRITICAL();
 				
-				if (value >ints[IDD_MAXTEMPERATURE])
+				if (value > temperatures[IDD_MAXTEMPERATURE])
 				{
-					ints[IDD_MAXTEMPERATURE] = value;
+					temperatures[IDD_MAXTEMPERATURE] = value;
 				}
-				if (value <ints[IDD_MINTEMPERATURE])
+				if (value < temperatures[IDD_MINTEMPERATURE])
 				{
-					ints[IDD_MINTEMPERATURE] = value;
+					temperatures[IDD_MINTEMPERATURE] = value;
 				}
 			}
 
@@ -127,9 +130,12 @@ static void vLcdHandler( void *pvParameters )
 		
 		
 		switch( message.idMessage)
-		{
-					
-			
+		{	
+			case IDM_DISPLAY_MAIN:
+			ShowTime();
+			lcd_putc(' ');
+			ShowDate();
+			break;
 		}
 	}
 } // task vLcdHandler ends
@@ -174,11 +180,21 @@ static void vKeyPadHandler( void *pvParameters )
 // this task keeps track of time in the background
 static void vClock( void *pvParameters )
 {
+	static DISPLAY_MESSAGE message;
 	( void ) pvParameters; // Just to stop compiler warnings.
 
 	vSemaphoreCreateBinary( xClock ); // create semaphore
 
 	StartTimer(125); // = interrupt every 8ms, 8*125 = 1000ms = 1s
+	
+	// message for lcd handler
+	message.data = 0;
+	message.idMessage = IDM_DISPLAY_MAIN;
+	
+	// starting data for date
+	ints[IDD_DAY] = 28;
+	ints[IDD_MONTH] = 12;
+	ints[IDD_YEAR] = 2020;
 	
 	for( ;; )//.........
 	{
@@ -189,8 +205,30 @@ static void vClock( void *pvParameters )
 		ints[ IDD_MINUTES ]= (secondsFromMidNight % 3600L) / 60L ;
 		ints[ IDD_SECONDS ]=  secondsFromMidNight % 60L;
 		taskEXIT_CRITICAL();
+		
+		// whole day gone by
+		if (secondsFromMidNight > (24 * 3600L))
+		{
+			secondsFromMidNight = 0;
+			ints[IDD_DAY]++;
+		}
+		
+		// whole month gone by
+		if (ints[IDD_DAY] > 31)
+		{
+			ints[IDD_DAY] = 1;
+			ints[IDD_MONTH]++;
+		}
+		
+		// whole year gone by
+		if (ints[IDD_MONTH] > 12)
+		{
+			ints[IDD_MONTH] = 1;
+			ints[IDD_YEAR]++;
+		}
+		
 		// show the time
-		ShowTime();
+		xQueueSend( xDisplay, (void*)&message, 0);
 	}
 } // task vClock ends
 
@@ -198,7 +236,7 @@ static void vClock( void *pvParameters )
 // use this task to print data to the terminal
 static void vTerminal( void *pvParameters )
 {
-	char szVariable [8];
+	char szVariable [20];
 	
 	const TickType_t xDelay = 1000 / portTICK_PERIOD_MS;
 
@@ -207,12 +245,15 @@ static void vTerminal( void *pvParameters )
 	for( ;; )
 	{
 		// print temperature to serial every second
-		itoa(ints[IDD_TEMPERATURE],szVariable,10);
+		ftoa(temperatures[IDD_TEMPERATURE], szVariable, 1);
 		xSerialxPrintf(&xSerialPort, szVariable);
 		xSerialxPrintf(&xSerialPort, "\n\r");
 		vTaskDelay( xDelay );
 	}
 } // task vTerminal ends
+
+// - APPLICATION TASKS -
+// ---------------------
 
 // timer0
 SIGNAL(TIMER0_COMPA_vect) {

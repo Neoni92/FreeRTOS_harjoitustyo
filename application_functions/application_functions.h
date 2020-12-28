@@ -16,5 +16,7 @@
 #include "ShowTime.h"
 #include "ShowDate.h"
 #include "StartTimer.h"
+#include "ReadKeyPadWithLCD.h"
+#include "FloatToString.h"
 
 #endif /* APPLICATION_FUNCTIONS_H_ */

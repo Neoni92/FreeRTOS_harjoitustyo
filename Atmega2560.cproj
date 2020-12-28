@@ -130,6 +130,18 @@
     <Compile Include="application_functions\application_functions.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="application_functions\FloatToString.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="application_functions\FloatToString.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="application_functions\ReadKeyPadWithLCD.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="application_functions\ReadKeyPadWithLCD.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="application_functions\ShowDate.c">
       <SubType>compile</SubType>
     </Compile>

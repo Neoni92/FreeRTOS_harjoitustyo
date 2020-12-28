@@ -18,10 +18,10 @@ void ShowTime(void)
 	lcd_putc('0');
 	itoa(ints[IDD_MINUTES],szVariable,10);
 	lcd_puts(szVariable);
-	lcd_putc(':');
+	//lcd_putc(':');
 	// sekunnit
-	if( ints[IDD_SECONDS] < 10)
+	/*if( ints[IDD_SECONDS] < 10)
 	lcd_putc('0');
 	itoa(ints[IDD_SECONDS],szVariable,10);
-	lcd_puts(szVariable);
+	lcd_puts(szVariable);*/
 }

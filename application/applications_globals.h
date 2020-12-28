@@ -35,13 +35,11 @@ typedef enum
 } Months;
 
 // tasks global data
-#define INTS_MAX 5
-#define INTS_MAX_TIME 6
+#define INTS_MAX 6
 unsigned long secondsFromMidNight = 0;	// seconds long, because otherwise there's not enough
 unsigned  mainScreenTimer = 5;			// initialize with >3 so the main screen shows immediately
 
 int ints[INTS_MAX] = {0};
-int intsTime[INTS_MAX_TIME] = {0};
 
 // (IDM = identification of message)
 #define IDM_UPDATE_DISPLAY 1
@@ -53,9 +51,10 @@ int intsTime[INTS_MAX_TIME] = {0};
 #define IDM_DISPLAY_UPDATE_DATE 7
 
 // (IDD = identification of data)
-#define IDD_TEMPERATURE 2
-#define IDD_MAXTEMPERATURE 3
-#define IDD_MINTEMPERATURE 4
+#define IDD_TEMPERATURE 0
+#define IDD_MAXTEMPERATURE 1
+#define IDD_MINTEMPERATURE 2
+float temperatures[INTS_MAX] = {0};
 
 // introducing the tasks
 static void vLcdHandler( void *pvParameters );
