@@ -37,7 +37,9 @@ typedef enum
 // tasks global data
 #define INTS_MAX 6
 unsigned long secondsFromMidNight = 0;	// seconds long, because otherwise there's not enough
-unsigned  mainScreenTimer = 5;			// initialize with >3 so the main screen shows immediately
+unsigned  mainScreenTimer = 5;			// initialize with > 3 so the main screen shows immediately
+unsigned previousScreen = 0;
+#define WAIT_BEFORE_MAIN_DISPLAY 3;
 
 int ints[INTS_MAX] = {0};
 

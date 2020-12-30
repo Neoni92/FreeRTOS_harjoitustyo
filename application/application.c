@@ -147,6 +147,8 @@ static void vKeyPadHandler( void *pvParameters )
 	static unsigned char ch = 0;
 	static DISPLAY_MESSAGE message;
 	
+	message.data = 0; // number of display
+	
 	( void ) pvParameters; /* Just to stop compiler warnings. */
 
 	for( ;; )
@@ -161,16 +163,19 @@ static void vKeyPadHandler( void *pvParameters )
 
 		switch( ch )
 		{
-			case IDK_DOWN: case IDK_UP: case IDK_RIGHT: case IDK_LEFT: case IDK_SELECT:
+			case IDK_SELECT:
+			// send message to lcd task to update the screen
+			message.idMessage = IDM_UPDATE_DISPLAY;
+			xQueueSend( xDisplay, (void*)&message,0);
+			break;
+			
+			case IDK_DOWN: case IDK_UP:
+			
+			case IDK_RIGHT: case IDK_LEFT:
 			
 			taskENTER_CRITICAL();
 			//ints[IDD_LASTKEY] = ch;
 			taskEXIT_CRITICAL();
-			// send message to lcd task to update the screen
-			message.data      = 0; // näytön numero
-			message.idMessage = IDM_UPDATE_DISPLAY;
-			xQueueSend( xDisplay, (void*)&message,0);
-			break;
 			default:; // other buttons
 		}
 	}
@@ -191,8 +196,8 @@ static void vClock( void *pvParameters )
 	message.data = 0;
 	message.idMessage = IDM_DISPLAY_MAIN;
 	
-	// starting data for date
-	ints[IDD_DAY] = 28;
+	// default data for date
+	ints[IDD_DAY] = 30;
 	ints[IDD_MONTH] = 12;
 	ints[IDD_YEAR] = 2020;
 	
