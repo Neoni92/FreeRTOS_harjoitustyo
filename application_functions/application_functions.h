@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <avr\io.h>
+#include <stdbool.h>
 #ifndef APPLICATION_FUNCTIONS_H_
 #define APPLICATION_FUNCTIONS_H_
 
@@ -18,5 +19,8 @@
 #include "StartTimer.h"
 #include "ReadKeyPadWithLCD.h"
 #include "FloatToString.h"
+#include "LCDWrite.h"
+#include "ChangeTime.h"
+#include "ChangeDate.h"
 
 #endif /* APPLICATION_FUNCTIONS_H_ */
