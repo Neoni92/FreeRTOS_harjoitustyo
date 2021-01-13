@@ -14,9 +14,6 @@
 #define APPLICATION_FUNCTIONS_H_
 
 #include "../devices/device.h"
-#include "ShowTime.h"
-#include "ShowDate.h"
-#include "StartTimer.h"
 #include "ReadKeyPadWithLCD.h"
 #include "FloatToString.h"
 #include "LCDWrite.h"

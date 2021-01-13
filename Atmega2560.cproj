@@ -160,24 +160,6 @@
     <Compile Include="application_functions\ReadKeyPadWithLCD.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="application_functions\ShowDate.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="application_functions\ShowDate.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="application_functions\ShowTime.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="application_functions\ShowTime.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="application_functions\StartTimer.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="application_functions\StartTimer.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="devices\adc.c">
       <SubType>compile</SubType>
     </Compile>

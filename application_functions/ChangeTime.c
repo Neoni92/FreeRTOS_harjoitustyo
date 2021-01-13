@@ -1,5 +1,6 @@
 #include "application_functions.h"
-
+#include "FreeRTOS.h"
+#include "task.h"
 extern int ints[];
 extern bool mainScreenTimerStopped;
 extern int secondsFromMidNight;
@@ -9,6 +10,7 @@ void ChangeTime (void)
 {
 	unsigned int hour, minutes, seconds;
 	
+	/* stop the mainScreenTimer so the user can set time */
 	mainScreenTimerStopped = true;
 	
 	hour = ReadKeyPadWithLCD("TIME SET\nHours: ", 23);
@@ -20,11 +22,8 @@ void ChangeTime (void)
 	
 	/* set the time */
 	secondsFromMidNight = hour*3600L+minutes*60L+seconds;
-	ints[IDD_SECONDS] = seconds;
-	ints[IDD_MINUTES] = minutes;
-	ints[IDD_HOUR] = hour;
-	
 	vTaskDelay(20);
 	
+	/* put on the timer again when time is set */
 	mainScreenTimerStopped = false;
 }

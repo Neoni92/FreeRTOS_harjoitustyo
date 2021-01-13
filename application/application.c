@@ -17,9 +17,18 @@ on the shield.
 #include <stdio.h>
 #include <string.h>
 
+/* scheduler include files */
+#include "FreeRTOS.h"
+#include "task.h"
+#include "croutine.h"
+#include "semphr.h"
+#include "serial.h"
+#include "queue.h"
+#include "event_groups.h"
+
 /* local devices */
 #include "../ds1820/sensor.h"   /* temperature functions */
-#include "..\devices\device.h"  /* lcd shield */
+#include "../devices\device.h"  /* lcd shield */
 
 #include "applications_globals.h" /* globals defines and data */
 #include "../application_functions/application_functions.h"
@@ -81,8 +90,8 @@ static void vDoMeasurements( void *pvParameters )
 
 			if (numberOfSensors)
 			{
+				taskENTER_CRITICAL();
 				value  = (float)(GetTemperature(0)/10000.0); /* convert long value to float */
-		        taskENTER_CRITICAL();
 		        temperatures[IDD_TEMPERATURE] = value;
 		        taskEXIT_CRITICAL();
 				
@@ -128,26 +137,20 @@ static void vLcdHandler( void *pvParameters )
 			/* main screen showing time and date + current temperature */
 			case IDM_DISPLAY_MAIN:
 			xSemaphoreTake(xDisplaySemaphore, portMAX_DELAY);
-			taskENTER_CRITICAL();
 			LCDWrite(message.data);
-			taskEXIT_CRITICAL();
 			xSemaphoreGive(xDisplaySemaphore);
 			break;
 			
 			/* the screen where user selects whether to update date or time */
 			case IDM_UPDATE_DISPLAY:
 			xSemaphoreTake(xDisplaySemaphore, portMAX_DELAY);
-			taskENTER_CRITICAL();
 			LCDWrite(message.data);
-			taskEXIT_CRITICAL();
 			xSemaphoreGive(xDisplaySemaphore);
 			break;
 			
 			case IDM_DISPLAY_MINMAX:
 			xSemaphoreTake(xDisplaySemaphore, portMAX_DELAY);
-			taskENTER_CRITICAL();
 			LCDWrite(message.data);
-			taskEXIT_CRITICAL();
 			xSemaphoreGive(xDisplaySemaphore);
 			break;
 		}
@@ -165,6 +168,10 @@ static void vKeyPadHandler( void *pvParameters )
 
 	for( ;; )
 	{
+		
+		const TickType_t xDelay = 500 / portTICK_PERIOD_MS;
+		vTaskDelay(xDelay);
+		
 		do
 		{
 			xSemaphoreTake( xADC, portMAX_DELAY );
@@ -191,20 +198,18 @@ static void vKeyPadHandler( void *pvParameters )
 				{
 					xSemaphoreTake(xADC, portMAX_DELAY);
 					ChangeTime();
-					vTaskDelay(20);
 					xSemaphoreGive(xADC);
-					message.idMessage = IDM_DISPLAY_MAIN;
+					message.idMessage = IDM_UPDATE_DISPLAY;
 				}
 				else if (ch == IDK_DOWN)
 				{
 					xSemaphoreTake(xADC, portMAX_DELAY);
 					ChangeDate();
-					vTaskDelay(20);
 					xSemaphoreGive(xADC);
-					message.idMessage = IDM_DISPLAY_MAIN;
+					message.idMessage = IDM_UPDATE_DISPLAY;
 				}
 			}
-			else if (previousScreen != IDM_DISPLAY_UPDATE_DATE && previousScreen != IDM_DISPLAY_UPDATE_TIME)
+			else if (previousScreen != IDM_UPDATE_DISPLAY)
 			{
 				message.idMessage = IDM_DISPLAY_MINMAX;
 				message.data = "Max:%t01C \nMin:%t02C";
@@ -215,10 +220,9 @@ static void vKeyPadHandler( void *pvParameters )
 			case IDK_RIGHT: case IDK_LEFT:
 			
 			break;
-			taskENTER_CRITICAL();
-			//ints[IDD_LASTKEY] = ch;
-			taskEXIT_CRITICAL();
-			default:; /* other buttons */
+			
+			default:
+			break; /* other buttons */
 		}
 	}
 } /* task vKeyPadHandler ends */
@@ -234,23 +238,10 @@ static void vClock( void *pvParameters )
 
 	StartTimer(125); /* = interrupt every 8ms, 8*125 = 1000ms = 1s */
 	
-	if (!mainScreenTimerStopped)
-	{
-		mainScreenTimer++;
-	}
-	
-	/* message for lcd handler */
-	message.idMessage = IDM_DISPLAY_MAIN;
-	
 	/* default data for date */
 	ints[IDD_DAY] = 10;
 	ints[IDD_MONTH] = 1;
 	ints[IDD_YEAR] = 2021;
-	
-	/* default data for time */
-	ints[IDD_HOUR] = 12;
-	ints[IDD_MINUTES] = 59;
-	ints[IDD_SECONDS] = 59;
 	
 	for( ;; )
 	{
@@ -261,6 +252,12 @@ static void vClock( void *pvParameters )
 		ints[ IDD_MINUTES ]= (secondsFromMidNight % 3600L) / 60L ;
 		ints[ IDD_SECONDS ]=  secondsFromMidNight % 60L;
 		taskEXIT_CRITICAL();
+		
+		/* prepare message data for lcd */
+		message.data = "%i00:%i01 %i03.%i04.%i05\n%t00 C";
+		
+		/* message for lcd handler */
+		message.idMessage = IDM_DISPLAY_MAIN;
 		
 		/* whole day gone by */
 		if (secondsFromMidNight > (24 * 3600L))
@@ -283,20 +280,22 @@ static void vClock( void *pvParameters )
 			ints[IDD_YEAR]++;
 		}
 		
-		/* prepare message data for lcd */
-		message.data = "%i00:%i01 %i03.%i04.%i05\n%t00 C";
-		
 		if (mainScreenTimer >= WAIT_BEFORE_MAIN_DISPLAY)
 		{
 			/* show the time */
 			xQueueSend( xDisplay, (void*)&message, 0);
 		}
 		
+		if (!mainScreenTimerStopped)
+		{
+			mainScreenTimer++;
+		}
+		
 	}
 } /* task vClock ends */
 
 /* task vTerminal starts */
-/* use this task to print data to the terminal, currently send temperature every second*/
+/* use this task to print data to the terminal, currently send temperature value every second*/
 static void vTerminal( void *pvParameters )
 {
 	char szVariable [20];
@@ -331,4 +330,14 @@ SIGNAL(TIMER0_COMPA_vect) {
 		xSemaphoreGiveFromISR( xClock, &xTaskWoken ); /* notify the change in time via semaphore */
 		msCounter = 0;
 	}
+}
+
+/* timer */
+void StartTimer( int ticks)
+{
+	// 0 = stop  1 = clock  2 = clock/8 3 = clock/64  4 = clock/256 5 = clock/1024
+	TCCR0B = (1<<FOC0A) | ( 1<<CS02) | (1<<CS00); /* Processors clock/1024   , if 16MHz => 64 us */
+	TIMSK0 |= (1 << OCIE0A); /* reference interrupt */
+	OCR0A = ticks; /* use the given number as a reference */
+	TCNT0 = 0;    /* to the start of the counter */
 }

@@ -7,7 +7,7 @@ int  ReadKeyPadWithLCD(char *szPrompt, int nMax)
 	int key;
 	char *p = szPrompt;
 
-	// show prompt
+	/* show prompt */
 	lcd_clrscr();
 	while(*p )
 	{
@@ -19,12 +19,12 @@ int  ReadKeyPadWithLCD(char *szPrompt, int nMax)
 	}
 	do
 	{
-		while( (key = GetKey()) == NO_KEY); // wait for button
+		while( (key = GetKey()) == NO_KEY); /* wait for button */
 		if (key == IDK_UP)
 		{
 			if(nValue < nMax)
 			nValue++;
-			// if max value, go back to zero to allow looping
+			
 			else if (nValue == nMax)
 			nValue = 0;
 		}
@@ -32,21 +32,32 @@ int  ReadKeyPadWithLCD(char *szPrompt, int nMax)
 		{
 			if(nValue)
 			nValue--;
-			// if min value, go back to max to allow looping
-			else if (!nValue)
+			
+			else if(!nValue)
 			nValue = nMax;
 		}
 		else if(key == IDK_SELECT)
 		{
-			while( (key = GetKey()) != NO_KEY); // wait for button to be free
+			while( (key = GetKey()) != NO_KEY); /* wait for button to be free */
 			return nValue;
 		}
-		// show the value
+		/* show the value */
 		itoa(nValue,text,10);
-		lcd_gotoxy(10,1);
+		
+		if (nValue<10)
+		{
+			lcd_gotoxy(10,1);
+			lcd_putc('0');
+			lcd_gotoxy(11,1);
+		}
+		else
+		{
+			lcd_gotoxy(10,1);
+		}
+			
 		lcd_puts(text);
 		
-		while( (key = GetKey()) != NO_KEY); // wait for button to be free
+		while( (key = GetKey()) != NO_KEY); /* wait for button to be free */
 
 	}
 	while(1);
