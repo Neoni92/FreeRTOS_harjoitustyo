@@ -21,3 +21,4 @@ Display will go back to main view if no buttons are pressed in 5 seconds
 - DQ -> A7 on 2560
 - also DQ pin to VDD with 4.7k ohm pull-up resistor in between.
 
+![schematic](![schematic](https://github.com/Neoni92/FreeRTOS_harjoitustyo/blob/master/images/wiring.png))
